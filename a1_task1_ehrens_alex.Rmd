@@ -43,13 +43,12 @@ amphibians_ramu_count <- amphibians_ramu %>%
 count_plot1 <- ggplot(data = amphibians_ramu_count,
                       aes(x = year, y = count, color = amphibian_life_stage, fill = amphibian_life_stage)) +
   geom_col(position = "dodge", show.legend = FALSE) +
-  theme_minimal() +
+  theme_bw() +
   scale_fill_brewer(palette = "Set1") +
   scale_color_brewer(palette = "Set1") +
   scale_x_continuous(labels = c(1996, 1998, 2000, 2002), breaks = c(1996, 1998, 2000, 2002)) +
   facet_wrap(~amphibian_life_stage, scales = "free") +
-  labs(title = "Counts of mountain yellow-legged frogs (Rana muscosa) by year and life stage",
-       subtitle = "1995 - 2002",
+  labs(title = expression(paste("Counts of mountain yellow-legged frogs (", italic("Rana muscosa"), ") by year and life stage")),
        fill = "Life Stage",
        color = "Life Stage",
        x = "Year of Survey",
@@ -82,7 +81,7 @@ count_plot2 <- ggplot(data = amphibians_top5_lakes,
   scale_fill_brewer(palette = "YlGnBu") +
   scale_color_brewer(palette = "YlGnBu") +
   theme_minimal() +
-  labs(title = "Top 5 lakes with the highest observed counts of adult and subadult mountain \nyellow-legged frogs (Rana muscosa)",
+  labs(title = expression(paste("Lakes with the highest observed counts of adult and subadult ", italic("Rana muscosa"))),
        x = "Lake Identification Number",
        y = "Individuals Observed")
 
@@ -91,7 +90,9 @@ count_plot2
 
 #### Step 6 - use `{patchwork}` package to combine two graphs into single figure 
 ```{r}
-patchwork_plot <- count_plot1 / count_plot2 & labs(caption = "ADD CAPTION LATER")
+patchwork_plot <- count_plot1 / count_plot2 & 
+  plot_annotation(caption = "Plots of total observed counts of mountain yellow-legged frogs (Rana muscosa) in the lakes and ponds of the Sierra Nevada \nmountains of California. Plot 1 (top) displays counts of individuals by year of survey and amphibian life stage (Adult in red, \nSubAdult in blue, and Tadpole in green). Plot 2 (bottom) shows the total observed counts of combined Adults and SubAdults \nin the 5 lakes with the highest number of observed individuals. Data from The Sierra Lakes Inventory Project, 2020.") &
+  theme(plot.caption = element_text(hjust = 0))
 
 patchwork_plot
 ```
