@@ -1,0 +1,99 @@
+---
+title: "Task 1 - Sierra Amphibians"
+author: "Alex Ehrens"
+date: "1/21/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+# attach packages
+library(tidyverse)
+library(janitor)
+library(patchwork)
+library(readxl)
+library(lubridate)
+```
+
+#### Step 1 - Read in Sierra amphibians Excel spreadsheet
+```{r}
+# read in file and change column headers to lower snake case
+amphibians <- read_excel("sierra_amphibians.xlsx") %>% 
+  clean_names()
+```
+
+#### Step 2 - Wrangle the data to get a total mountain yellow-legged frog (*Rana muscosa*) count each year
+```{r}
+# filter to include only Rana muscosa (RAMU) species and exclude the "EggMass" life stage, then convert survey_date to date format and pull out just the year
+amphibians_ramu <- amphibians %>% 
+  filter(amphibian_species == "RAMU") %>% 
+  filter(amphibian_life_stage != "EggMass") %>%
+  mutate(survey_date = ymd(survey_date)) %>% 
+  mutate(year = year(survey_date))
+
+# group by life stage and year, then get a count of Rana muscosa
+amphibians_ramu_count <- amphibians_ramu %>% 
+  count(year, amphibian_life_stage, wt = amphibian_number) %>% 
+  rename(count = n)
+```
+
+#### Step 3 - Produce plot of mountain yellow-legged frog (*Rana muscosa*) count
+```{r}
+count_plot1 <- ggplot(data = amphibians_ramu_count,
+                      aes(x = year, y = count, color = amphibian_life_stage, fill = amphibian_life_stage)) +
+  geom_col(position = "dodge", show.legend = FALSE) +
+  theme_minimal() +
+  scale_fill_brewer(palette = "Set1") +
+  scale_color_brewer(palette = "Set1") +
+  scale_x_continuous(labels = c(1996, 1998, 2000, 2002), breaks = c(1996, 1998, 2000, 2002)) +
+  facet_wrap(~amphibian_life_stage, scales = "free") +
+  labs(title = "Counts of mountain yellow-legged frogs (Rana muscosa) by year and life stage",
+       subtitle = "1995 - 2002",
+       fill = "Life Stage",
+       color = "Life Stage",
+       x = "Year of Survey",
+       y = "Individuals Observed")
+
+count_plot1
+```
+
+#### Step 4 - Wrangle data to get total counts of adult and subadult *Rana muscosa* in the 5 lakes with greatest total observed counts
+```{r}
+# filter original amphibians dataset to only include adult and subadult frogs, then reformat lake ID
+amphibians_lakes <- amphibians %>% 
+  filter(amphibian_species == "RAMU") %>% 
+  filter(amphibian_life_stage == c("Adult", "SubAdult")) %>% 
+  mutate(lake_id = paste0("Lake ", lake_id))
+
+# group by lakes and summarize to get counts of frogs by lake, then 
+amphibians_top5_lakes <- amphibians_lakes %>% 
+  count(lake_id, wt = amphibian_number) %>% 
+  rename(count = n) %>% 
+  slice_max(count, n = 5)
+```
+
+#### Step 5 - Produce plot of lakes with top 5 most observed counts of adult and subadult *Rana muscosa*
+```{r}
+count_plot2 <- ggplot(data = amphibians_top5_lakes,
+                      aes(x = fct_reorder(lake_id, -count), y = count)) +
+  geom_col(aes(color = fct_reorder(lake_id, count), fill = fct_reorder(lake_id, count)),
+           show.legend = FALSE) +
+  scale_fill_brewer(palette = "YlGnBu") +
+  scale_color_brewer(palette = "YlGnBu") +
+  theme_minimal() +
+  labs(title = "Top 5 lakes with the highest observed counts of adult and subadult mountain \nyellow-legged frogs (Rana muscosa)",
+       x = "Lake Identification Number",
+       y = "Individuals Observed")
+
+count_plot2
+```
+
+#### Step 6 - use `{patchwork}` package to combine two graphs into single figure 
+```{r}
+patchwork_plot <- count_plot1 / count_plot2 & labs(caption = "ADD CAPTION LATER")
+
+patchwork_plot
+```
+
+##### End Task 1
